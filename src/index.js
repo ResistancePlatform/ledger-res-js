@@ -29,6 +29,18 @@ async function getRPCClient() {
   return clientInstance
 }
 
+async function getBtcTransport(){
+	try {
+		const transport = await TransportNodeHid.create(1000);
+  	var btc = new AppBtc(transport);
+  	return btc
+  } catch (err) {
+  	//console.log(err)
+  	console.log("Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
+  	return false
+  }
+}
+
 Number.prototype.toFixedDown = function(digits) {
     var re = new RegExp("(\\d+\\.\\d{" + digits + "})(\\d)"),
         m = this.toString().match(re);
@@ -198,63 +210,63 @@ async function getPublicKey(btc, count) {
 	}
 }
 
-async function sendCoins(to_address, bip32_index, fee, amount){
+async function sendCoins(btc, rpcclient, to_address, bip32_index, fee, amount){
 	fee.toFixedDown(8)
-	let rpcclient = await getRPCClient()
-	let info = await rpcclient.getInfo()
-	var btc = ""
-	try {
-		const transport = await TransportNodeHid.create(1000);
-  	btc = new AppBtc(transport);
-  } catch (err) {
-  	//console.log(err)
-  	console.log("Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
-  	process.exit()
-  }
+	if(rpcclient){
+		let info = await rpcclient.getInfo()
+		if (btc){
+			try {
+				var publicKey = await getPublicKey(btc, bip32_index)
+				var resAddress = publicKey.bitcoinAddress
+				console.log(resAddress)
+			} catch (err) {
+				//console.log(err.message)
+				console.log("Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
+		  	process.exit()
+			}
 
-	try {
-		var publicKey = await getPublicKey(btc, bip32_index)
-		var resAddress = publicKey.bitcoinAddress
-		console.log(resAddress)
-	} catch (err) {
-		//console.log(err.message)
-		console.log("Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
-  	process.exit()
+			let watchOnlyResult = await addWatchOnly(resAddress)
+			let balance = await getLedgerAddressBalance(resAddress)
+			console.log("Address: " + resAddress + " Balance: " + JSON.stringify(balance))
+			let utxos = await getUTXOs(resAddress)
+			let targets = [{address:to_address, value:amount}]
+			let { inputs, outputs} = await coinSelect(utxos, targets, fee)
+			if (!inputs || !outputs) {console.log("Can't create transaction, not enough coins."); process.exit()}
+
+			let signedTransaction = await createAndSignTransaction(btc, inputs, outputs, resAddress)
+			return signedTransaction
+		} else {
+			console.log("Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
+			return false
+		}
+	} else {
+		console.log("Could not connect to rpcclient.")
+		return false
 	}
-
-	let watchOnlyResult = await addWatchOnly(resAddress)
-	let balance = await getLedgerAddressBalance(resAddress)
-	console.log("Address: " + resAddress + " Balance: " + JSON.stringify(balance))
-	let utxos = await getUTXOs(resAddress)
-	let targets = [{address:to_address, value:amount}]
-	let { inputs, outputs} = await coinSelect(utxos, targets, fee)
-	if (!inputs || !outputs) {console.log("Can't create transaction, not enough coins."); process.exit()}
-
-	let signedTransaction = await createAndSignTransaction(btc, inputs, outputs, resAddress)
-	return signedTransaction
 }
 
+//main function -> example code
 (async () => {
 
-	//get public address
-	/*var btc = ""
-	try {
-		const transport = await TransportNodeHid.create(1000);
-  	btc = new AppBtc(transport);
-  	console.log(await getPublicKey(btc, 0))
-  	process.exit()
-  } catch (err) {
-  	console.log(err)
-  	console.log("Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
-  	process.exit()
-  }*/
+	// initialize btc transport
+	let btc = await getBtcTransport()
+
+	// initialize connection to rpc client
+  let rpcclient = await getRPCClient()
 
   //send some coins
-  let signedTransaction = await sendCoins('rp5wwANPBfBaEEJCnTFGL7Nfa3Fp2cj3fq3', 0, 0.0001, 1)
+
+ 	//set coin sending parameters
+  let sendToAddress = 'rp5wwANPBfBaEEJCnTFGL7Nfa3Fp2cj3fq3'
+  let ledgerBipIndex = 0
+  let txFee = 0.0001
+  let payAmount = 1
+
+  //sign the transaction using the ledger private key
+  let signedTransaction = await sendCoins(btc, rpcclient, sendToAddress, ledgerBipIndex, txFee, payAmount)
   console.log(signedTransaction)
+
+  //broadcast the transaction to the Resistance network
   let sentTransaction = await sendRawTransaction(signedTransaction)
 
-  /*let rpcclient = await getRPCClient()
-	let info = await rpcclient.getInfo()
-	console.log(info)*/
 })();
