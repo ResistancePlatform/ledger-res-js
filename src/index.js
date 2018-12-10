@@ -14,8 +14,7 @@ async function getRPCClient() {
     password: 'xt89hYfpCieLU8HjFjNU3+1vwA2AegCVmNR0jQC5MUM=',
     timeout: 10000
   })
-
-  bluebird.promisifyAll(clientInstance)
+  
   return clientInstance
 }
 
