@@ -3,6 +3,16 @@ import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import AppBtc from "@ledgerhq/hw-app-btc";
 import Client from 'bitcoin-core'
 import coinSelect from 'coinselect'
+import winston from 'winston'
+
+
+const logger = winston.createLogger({
+  level: 'debug',
+  format: winston.format.json(),
+  transports: [
+  	new winston.transports.Console({ format: winston.format.simple() })
+  ]
+});
 
 
 async function getRPCClient() {
@@ -12,6 +22,7 @@ async function getRPCClient() {
     port: 18232,
     username: 'barterres',
     password: 'xt89hYfpCieLU8HjFjNU3+1vwA2AegCVmNR0jQC5MUM=',
+    logger: logger,
     timeout: 10000
   })
   
@@ -239,11 +250,11 @@ async function sendCoins(to_address, bip32_index, fee, amount){
   }*/
 
   //send some coins
-  /*let signedTransaction = await sendCoins('rp5wwANPBfBaEEJCnTFGL7Nfa3Fp2cj3fq3', 0, 0.0001, 1)
+  let signedTransaction = await sendCoins('rp5wwANPBfBaEEJCnTFGL7Nfa3Fp2cj3fq3', 0, 0.0001, 1)
   console.log(signedTransaction)
-  let sentTransaction = await sendRawTransaction(signedTransaction)*/
+  let sentTransaction = await sendRawTransaction(signedTransaction)
 
-  let rpcclient = await getRPCClient()
+  /*let rpcclient = await getRPCClient()
 	let info = await rpcclient.getInfo()
-
+	console.log(info)*/
 })();
