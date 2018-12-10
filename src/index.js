@@ -254,11 +254,16 @@ async function sendCoins(btc, rpcclient, to_address, bip32_index, fee, amount){
 	// initialize connection to rpc client
   let rpcclient = await getRPCClient()
 
-  //send some coins
+  //Get the address from Ledger
+  let ledgerBipIndex = 0
+  var publicKey = await getPublicKey(btc, ledgerBipIndex)
+	var resAddress = publicKey.bitcoinAddress
+  console.log(`Ledger Address: ${resAddress} -> You can send coins to this address to put them in your Ledger!`)
 
+
+  //send some coins
  	//set coin sending parameters
   let sendToAddress = 'rp5wwANPBfBaEEJCnTFGL7Nfa3Fp2cj3fq3'
-  let ledgerBipIndex = 0
   let txFee = 0.0001
   let payAmount = 1
 
