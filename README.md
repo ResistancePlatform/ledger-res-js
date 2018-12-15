@@ -1,14 +1,16 @@
-# Installation
-
-## Yarn/Npm
+# Install as Dependency
 
 ## NPM
 
+```
 npm install git+ssh://git@github.com:ResistancePlatform/ledger-res-js.git --save
+```
 
 ## Yarn
 
+```
 yarn add git+ssh://git@github.com:ResistancePlatform/ledger-res-js.git --save
+```
 
 ## Examples
 
