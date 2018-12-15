@@ -2,7 +2,7 @@
   "private": true,
   "name": "ledger-res",
   "version": "4.24.0",
-  "main": "index.js",
+  "main": "./lib/ledger-res.js",
   "license": "Apache-2.0",
   "presets": [
     "env"
@@ -11,17 +11,19 @@
     "@ledgerhq/hw-app-btc": "^4.30.0",
     "@ledgerhq/hw-transport": "^4.24.0",
     "@ledgerhq/hw-transport-node-hid": "^4.24.0",
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
     "bitcoin-core": "^2.0.0",
     "coinselect": "git+ssh://git@github.com:ResistancePlatform/coinselect.git",
     "winston": "^3.1.0"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
     "flow-bin": "^0.68.0",
     "flow-typed": "^2.4.0"
   },
   "scripts": {
-    "start": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./dist && node ./dist/index.js"
+    "build": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./lib",
+    "start": "node ./lib/resdex.js",
+    "example": "yarn build && ./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./example -d ./lib && node ./lib/example.js"
   }
 }

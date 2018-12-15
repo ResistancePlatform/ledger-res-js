@@ -2,11 +2,23 @@
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import AppBtc from "@ledgerhq/hw-app-btc";
 import coinSelect from 'coinselect'
+import errorList from "./error"
 
 Number.prototype.toFixedDown = function(digits) {
   var re = new RegExp("(\\d+\\.\\d{" + digits + "})(\\d)"),
   m = this.toString().match(re);
   return m ? parseFloat(m[1]) : this.valueOf();
+}
+
+class LedgerResError extends Error {
+  constructor(err) {
+    var name = err.name
+    var message = err.message
+    const { error } = name
+    super(error || message)
+    this.name = name
+    this.code = errorList[name]
+  }
 }
 
 export default class LedgerRes {
@@ -20,9 +32,7 @@ export default class LedgerRes {
       const transport = await TransportNodeHid.create(1000);
       this.btcTransport = new AppBtc(transport);
     } catch (err) {
-      console.log(err)
-      console.log("1 Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
-      this.btcTransport = null
+      throw new LedgerResError(err);
     }
   }
 
@@ -32,7 +42,7 @@ export default class LedgerRes {
       const pubKey = await this.btcTransport.getWalletPublicKey("0'/0'/" + count);
       return pubKey
     } catch (err) {
-      console.log("2 Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
+      throw new LedgerResError(err);
     }
   }
 
@@ -49,8 +59,7 @@ export default class LedgerRes {
       let result = await this.rpcClient.importAddress(address, "", true)
       return result
     } catch (err) {
-      console.log(err)
-      return err
+      throw new LedgerResError(err);
     }
   }
 
@@ -59,8 +68,7 @@ export default class LedgerRes {
       let result = await this.rpcClient.sendRawTransaction(transaction)
       return result
     } catch (err) {
-      console.log(err)
-      return err
+      throw new LedgerResError(err);
     }
   }
 
@@ -74,8 +82,7 @@ export default class LedgerRes {
         }
       }
     } catch (err) {
-      console.log(err)
-      return err
+      throw new LedgerResError(err);
     }
   }
 
@@ -84,8 +91,7 @@ export default class LedgerRes {
       let transaction = await this.rpcClient.getRawTransaction(txid)
       return transaction
     } catch (err) {
-      console.log(err)
-      return err
+      throw new LedgerResError(err);
     }
   }
 
@@ -94,8 +100,7 @@ export default class LedgerRes {
       let transaction = await this.rpcClient.createRawTransaction(finalinputs, finaloutputs)
       return transaction
     } catch (err) {
-      console.log(err)
-      return err
+      throw new LedgerResError(err);
     }
   }
 
@@ -116,12 +121,16 @@ export default class LedgerRes {
 
     for(var i = 0; i < inputs.length; i++){
       let tx = await this.getTx(inputs[i].txid)
-      var inputsm = {txid: inputs[i].txid, vout: inputs[i].vout}
-      var inputsi = [this.btcTransport.splitTransaction(tx), inputs[i].vout]
-      finalinputs.push(inputsi)
-      middleinputs.push(inputsm)
-      sumInputs += inputs[i].value
-      associatedkeypaths.push(keypath)
+      try {
+        var inputsm = {txid: inputs[i].txid, vout: inputs[i].vout}
+        var inputsi = [this.btcTransport.splitTransaction(tx), inputs[i].vout]
+        finalinputs.push(inputsi)
+        middleinputs.push(inputsm)
+        sumInputs += inputs[i].value
+        associatedkeypaths.push(keypath)
+      } catch(err) {
+        throw new LedgerResError(err);
+      }
     }
 
     for(var i = 0; i < outputs.length; i++){
@@ -133,24 +142,24 @@ export default class LedgerRes {
     var change = sumInputs - (sumOutputs + fee)
     finaloutputs[changeAddress] = change.toFixedDown(6)
 
-    console.log("About to create raw transaction")
-    console.log(middleinputs, finaloutputs)
-    var txOutRaw = await this.createRawTransaction(middleinputs,finaloutputs)
-    var txOut = this.btcTransport.splitTransaction(txOutRaw)
-    const outputScript = this.btcTransport.serializeTransactionOutputs(txOut).toString('hex');
-
-    console.log(associatedkeypaths)
+    const outputScript = null
 
     try {
+
+      var txOutRaw = await this.createRawTransaction(middleinputs,finaloutputs)
+      var txOut = this.btcTransport.splitTransaction(txOutRaw)
+      const outputScript = this.btcTransport.serializeTransactionOutputs(txOut).toString('hex');
+
       let signedTransaction = await this.btcTransport.createPaymentTransactionNew(
         finalinputs,
         associatedkeypaths,
-        changepath,
+        undefined, //changepath,
         outputScript
       )
       return signedTransaction
+
     } catch (err) {
-      console.log(err)
+      throw new LedgerResError(err);
     }
   }
 
@@ -158,18 +167,15 @@ export default class LedgerRes {
     try {
       let utxos = []
       let allUTXOs = await this.rpcClient.listUnspent()
-      //console.log(utxos)
       for(var i = 0; i < allUTXOs.length; i++){
         if(allUTXOs[i].address == address){
-          //console.log(JSON.stringify(allUTXOs[i]))
           allUTXOs[i].value = allUTXOs[i].amount
           utxos.push(allUTXOs[i])
         }
       }
       return utxos
     } catch (err) {
-      console.log(err)
-      return err;
+      throw new LedgerResError(err);
     }
   }
 
@@ -177,7 +183,6 @@ export default class LedgerRes {
     try{
       var balance = 0
       let allUTXOs = await this.rpcClient.listUnspent()
-      //console.log(allUTXOs)
       for(var i = 0; i < allUTXOs.length; i++){
         if(allUTXOs[i].address == address){
           balance += allUTXOs[i].amount
@@ -185,43 +190,36 @@ export default class LedgerRes {
       }
       return balance
     } catch (err) {
-      console.log(err)
-      return err
+      throw new LedgerResError(err);
     }
   }
 
   async sendCoins(to_address, bip32_index, fee, amount){
     fee.toFixedDown(8)
-    if(this.rpcClient){
+    try {
       let info = await this.rpcClient.getInfo()
-      if (this.btcTransport){
+      try {
         try {
           var publicKey = await this.getPublicKey(bip32_index)
           var resAddress = publicKey.bitcoinAddress
-          console.log(resAddress)
         } catch (err) {
-          console.log(err.message)
-          console.log("3 Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
-          process.exit()
+          throw new LedgerResError(err);
         }
 
         let watchOnlyResult = await this.addWatchOnly(resAddress)
         let balance = await this.getLedgerAddressBalance(resAddress)
-        console.log("Address: " + resAddress + " Balance: " + JSON.stringify(balance))
         let utxos = await this.getUTXOs(resAddress)
         let targets = [{address:to_address, value:amount}]
         let { inputs, outputs} = await coinSelect(utxos, targets, fee)
-        if (!inputs || !outputs) {console.log("Can't create transaction, not enough coins."); process.exit()}
+        if (!inputs || !outputs) {throw new LedgerResError({name:"CoinSplit Error",message:"Not enough coins."})}
 
         let signedTransaction = await this.createAndSignTransaction(inputs, outputs, resAddress)
         return signedTransaction
-      } else {
-        console.log("4 Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
-        return false
+      } catch(err) {
+        throw new LedgerResError(err);
       }
-    } else {
-      console.log("Could not connect to rpcclient.")
-      return false
+    } catch(err) {
+      throw new LedgerResError(err);
     }
   }
 
