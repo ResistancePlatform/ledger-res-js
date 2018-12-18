@@ -1,19 +1,18 @@
 'use strict'
-import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
-import AppBtc from "@ledgerhq/hw-app-btc";
+import TransportNodeHid from "@ledgerhq/hw-transport-node-hid"
+import AppBtc from "@ledgerhq/hw-app-btc"
 import coinSelect from 'coinselect'
 import errorList from "./error"
 
-Number.prototype.toFixedDown = function(digits) {
-  var re = new RegExp("(\\d+\\.\\d{" + digits + "})(\\d)"),
-  m = this.toString().match(re);
-  return m ? parseFloat(m[1]) : this.valueOf();
+Number.prototype.toFixedDown = digits => {
+  const re = new RegExp(`(\d+\.\d{${digits}})(\d)`)
+  m = this.toString().match(re)
+  return m ? parseFloat(m[1]) : this.valueOf()
 }
 
 class LedgerResError extends Error {
   constructor(err) {
-    var name = err.name
-    var message = err.message
+    const { name, message } = err
     const { error } = name
     super(error || message)
     this.name = name
@@ -22,27 +21,27 @@ class LedgerResError extends Error {
 }
 
 export default class LedgerRes {
-  constructor(rpcClient){
+  constructor(rpcClient) {
     this.rpcClient = rpcClient
     this.btcTransport = null
   }
 
-  async init(){
+  async init() {
     try {
-      const transport = await TransportNodeHid.create(1000);
-      this.btcTransport = new AppBtc(transport);
+      const transport = await TransportNodeHid.create(1000)
+      this.btcTransport = new AppBtc(transport)
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
-  //public functions
+  // Public functions
   async getPublicKey(count) {
-    try{
-      const pubKey = await this.btcTransport.getWalletPublicKey("0'/0'/" + count);
+    try {
+      const pubKey = await this.btcTransport.getWalletPublicKey(`0'/0'/${count}`)
       return pubKey
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
@@ -56,170 +55,184 @@ export default class LedgerRes {
 
   async addWatchOnly(address) {
     try {
-      let result = await this.rpcClient.importAddress(address, "", true)
+      const result = await this.rpcClient.importAddress(address, '', true)
       return result
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
   async sendRawTransaction(transaction){
     try {
-      let result = await this.rpcClient.sendRawTransaction(transaction)
+      const result = await this.rpcClient.sendRawTransaction(transaction)
       return result
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
   async getTxIds(address){
     try {
-      let received = await this.rpcClient.listReceivedByAddress(0, true, true)
+      const received = await this.rpcClient.listReceivedByAddress(0, true, true)
 
-      for(var i = 0; i < received.length; i++){
-        if(received[i].address == address){
+      for (let i = 0; i < received.length; i+=1) {
+        if(received[i].address === address){
           return received[i].txids
         }
       }
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
-  async getTx(txid){
+  async getTx(txid) {
     try {
-      let transaction = await this.rpcClient.getRawTransaction(txid)
+      const transaction = await this.rpcClient.getRawTransaction(txid)
       return transaction
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
-  async createRawTransaction(finalinputs, finaloutputs){
+  async createRawTransaction(finalinputs, finaloutputs) {
     try {
-      let transaction = await this.rpcClient.createRawTransaction(finalinputs, finaloutputs)
+      const transaction = await this.rpcClient.createRawTransaction(finalinputs, finaloutputs)
       return transaction
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
   async createAndSignTransaction(inputs, outputs, changeAddress) {
-    // outputs - inputs = transaction fee
-    var finalinputs = []
-    var middleinputs = []
-    var finaloutputs = {}
+    // Outputs - inputs = transaction fee
 
-    var sumInputs = 0
-    var sumOutputs = 0
-    var fee = 0.0001
+    const finalinputs = []
+    const middleinputs = []
+    const finaloutputs = {}
 
-    var keypath = "0'/0'/0"
-    var associatedkeypaths = []
+    let sumInputs = 0
+    let sumOutputs = 0
+    const fee = 0.0001
 
-    var changepath = "0'/0'/0"
+    const keypath = `0'/0'/0`
+    const associatedkeypaths = []
 
-    for(var i = 0; i < inputs.length; i++){
-      let tx = await this.getTx(inputs[i].txid)
+    const changepath = `0'/0'/0`
+
+    for (let i = 0; i < inputs.length; i+=1) {
+      const tx = await this.getTx(inputs[i].txid)
+
       try {
-        var inputsm = {txid: inputs[i].txid, vout: inputs[i].vout}
-        var inputsi = [this.btcTransport.splitTransaction(tx), inputs[i].vout]
+        const inputsm = {txid: inputs[i].txid, vout: inputs[i].vout}
+        const inputsi = [this.btcTransport.splitTransaction(tx), inputs[i].vout]
+
         finalinputs.push(inputsi)
         middleinputs.push(inputsm)
         sumInputs += inputs[i].value
         associatedkeypaths.push(keypath)
+
       } catch(err) {
-        throw new LedgerResError(err);
+        throw new LedgerResError(err)
       }
     }
 
-    for(var i = 0; i < outputs.length; i++){
+    for (let i = 0; i < outputs.length; i+=1) {
       finaloutputs[outputs[i].address] = outputs[i].value
       sumOutputs += outputs[i].value
     }
 
     // Add change address, inputs - (outputs + fees)
-    var change = sumInputs - (sumOutputs + fee)
+    const change = sumInputs - (sumOutputs + fee)
     finaloutputs[changeAddress] = change.toFixedDown(6)
 
     const outputScript = null
 
     try {
+      const txOutRaw = await this.createRawTransaction(middleinputs, finaloutputs)
+      const txOut = this.btcTransport.splitTransaction(txOutRaw)
+      const outputScript = this.btcTransport.serializeTransactionOutputs(txOut).toString('hex')
 
-      var txOutRaw = await this.createRawTransaction(middleinputs,finaloutputs)
-      var txOut = this.btcTransport.splitTransaction(txOutRaw)
-      const outputScript = this.btcTransport.serializeTransactionOutputs(txOut).toString('hex');
-
-      let signedTransaction = await this.btcTransport.createPaymentTransactionNew(
+      const signedTransaction = await this.btcTransport.createPaymentTransactionNew(
         finalinputs,
         associatedkeypaths,
-        undefined, //changepath,
+        undefined, // changepath,
         outputScript
       )
       return signedTransaction
 
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
-  async getUTXOs(address){
+  async getUTXOs(address) {
     try {
-      let utxos = []
-      let allUTXOs = await this.rpcClient.listUnspent()
-      for(var i = 0; i < allUTXOs.length; i++){
-        if(allUTXOs[i].address == address){
+      const utxos = []
+      const allUTXOs = await this.rpcClient.listUnspent()
+
+      for (let i = 0; i < allUTXOs.length; i+=1) {
+        if(allUTXOs[i].address === address){
           allUTXOs[i].value = allUTXOs[i].amount
           utxos.push(allUTXOs[i])
         }
       }
       return utxos
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
-  async getLedgerAddressBalance(address){
-    try{
-      var balance = 0
-      let allUTXOs = await this.rpcClient.listUnspent()
-      for(var i = 0; i < allUTXOs.length; i++){
-        if(allUTXOs[i].address == address){
+  async getLedgerAddressBalance(address) {
+    try {
+      let balance = 0
+      const allUTXOs = await this.rpcClient.listUnspent()
+
+      for (var i = 0; i < allUTXOs.length; i+=1) {
+        if(allUTXOs[i].address === address) {
           balance += allUTXOs[i].amount
         }
       }
+
       return balance
     } catch (err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
-  async sendCoins(to_address, bip32_index, fee, amount){
+  async sendCoins(toAddress, bip32Index, fee, amount) {
     fee.toFixedDown(8)
+
     try {
-      let info = await this.rpcClient.getInfo()
+      const info = await this.rpcClient.getInfo()
+
       try {
         try {
-          var publicKey = await this.getPublicKey(bip32_index)
-          var resAddress = publicKey.bitcoinAddress
+          const publicKey = await this.getPublicKey(bip32Index)
+          const resAddress = publicKey.bitcoinAddress
         } catch (err) {
-          throw new LedgerResError(err);
+          throw new LedgerResError(err)
         }
 
-        let watchOnlyResult = await this.addWatchOnly(resAddress)
-        let balance = await this.getLedgerAddressBalance(resAddress)
-        let utxos = await this.getUTXOs(resAddress)
-        let targets = [{address:to_address, value:amount}]
-        let { inputs, outputs} = await coinSelect(utxos, targets, fee)
-        if (!inputs || !outputs) {throw new LedgerResError({name:"CoinSplit Error",message:"Not enough coins."})}
+        const watchOnlyResult = await this.addWatchOnly(resAddress)
+        const balance = await this.getLedgerAddressBalance(resAddress)
+        const utxos = await this.getUTXOs(resAddress)
+        const targets = [{address: toAddress, value: amount}]
+        const { inputs, outputs } = await coinSelect(utxos, targets, fee)
+
+        if (!inputs || !outputs) {
+            throw new LedgerResError({
+                name: `CoinSplit Error`,
+                message: `Not enough coins.`
+            })
+        }
 
         let signedTransaction = await this.createAndSignTransaction(inputs, outputs, resAddress)
         return signedTransaction
       } catch(err) {
-        throw new LedgerResError(err);
+        throw new LedgerResError(err)
       }
     } catch(err) {
-      throw new LedgerResError(err);
+      throw new LedgerResError(err)
     }
   }
 
