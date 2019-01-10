@@ -25,6 +25,6 @@
     "build": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./lib",
     "start": "node ./lib/ledger-res.js",
     "example": "yarn build && ./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./example -d ./lib && node ./lib/example.js",
-    "prepublish":"./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./lib"
+    "prepublish": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./lib"
   }
 }
