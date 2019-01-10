@@ -206,7 +206,7 @@ export default class LedgerRes {
           throw new LedgerResError(err);
         }
 
-        //let watchOnlyResult = await this.addWatchOnly(resAddress)
+        let watchOnlyResult = await this.addWatchOnly(resAddress)
         let balance = await this.getLedgerAddressBalance(resAddress)
         let utxos = await this.getUTXOs(resAddress)
         let targets = [{address:to_address, value:amount}]
