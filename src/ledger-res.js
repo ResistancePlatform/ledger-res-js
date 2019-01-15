@@ -182,6 +182,7 @@ export default class LedgerRes {
   async getLedgerAddressBalance(address){
     try{
       var balance = 0
+      let watchOnlyResult = await this.addWatchOnly(address)
       let allUTXOs = await this.rpcClient.listUnspent()
       for(var i = 0; i < allUTXOs.length; i++){
         if(allUTXOs[i].address == address){
