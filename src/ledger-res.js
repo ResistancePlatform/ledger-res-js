@@ -25,36 +25,46 @@ class LedgerResError extends Error {
 }
 
 export default class LedgerRes {
-  constructor(rpcClient){
+ constructor(rpcClient){
     this.rpcClient = rpcClient
-    this.btcTransport = null
   }
 
-  async init(){
+  async getDevice() {
     try {
       const transport = await TransportNodeHid.create(1000);
-      this.btcTransport = new AppBtc(transport);
+      const ledger = new AppBtc(transport);
+
+      ledger.close = () => transport.close();
+      return ledger
+
     } catch (err) {
       throw new LedgerResError(err);
     }
   }
 
-  //public functions
   async getPublicKey(count) {
     try{
-      const pubKey = await this.btcTransport.getWalletPublicKey("0'/0'/" + count);
-      return pubKey
+      const ledger = await this.getDevice();
+      const bitcoinAddress = await ledger.getWalletPublicKey("0'/0'/" + count);
+      await ledger.close();
+      return bitcoinAddress;
+
     } catch (err) {
       throw new LedgerResError(err);
+    }
+  }
+
+  async isAvailable() {
+    try {
+      await getPublicKey(0);
+      return true;
+    } catch (err) {
+      return false;
     }
   }
 
   async getRpcClient() {
     return this.rpcClient
-  }
-
-  async getBtcTransport() {
-    return this.btcTransport
   }
 
   async addWatchOnly(address) {
@@ -122,11 +132,13 @@ export default class LedgerRes {
 
     var changepath = "0'/0'/0"
 
+    const ledger = await this.getDevice();
+
     for(var i = 0; i < inputs.length; i++){
       let tx = await this.getTx(inputs[i].txid)
       try {
         var inputsm = {txid: inputs[i].txid, vout: inputs[i].vout}
-        var inputsi = [this.btcTransport.splitTransaction(tx), inputs[i].vout]
+        var inputsi = [ledger.splitTransaction(tx), inputs[i].vout]
         finalinputs.push(inputsi)
         middleinputs.push(inputsm)
         sumInputs += inputs[i].value
@@ -150,10 +162,10 @@ export default class LedgerRes {
     try {
 
       var txOutRaw = await this.createRawTransaction(middleinputs,finaloutputs)
-      var txOut = this.btcTransport.splitTransaction(txOutRaw)
-      const outputScript = this.btcTransport.serializeTransactionOutputs(txOut).toString('hex');
+      var txOut = ledger.splitTransaction(txOutRaw)
+      const outputScript = ledger.serializeTransactionOutputs(txOut).toString('hex');
 
-      let signedTransaction = await this.btcTransport.createPaymentTransactionNew(
+      let signedTransaction = await ledger.createPaymentTransactionNew(
         finalinputs,
         associatedkeypaths,
         undefined, //changepath,
@@ -163,6 +175,8 @@ export default class LedgerRes {
 
     } catch (err) {
       throw new LedgerResError(err);
+    } finally {
+      ledger.close()
     }
   }
 

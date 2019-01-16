@@ -20,20 +20,17 @@ import LedgerRes from './ledger-res'
       network: 'testnet',
       host: '127.0.0.1',
       port: 18132,
-      username: '',
-      password: '',
+      username: 'barterres',
+      password: 'xt89hYfpCieLU8HjFjNU3+1vwA2AegCVmNR0jQC5MUM',
       logger: logger,
       timeout: 10000
     })
 
-    if(!rpcClient.username || !rpcClient.password){
-      console.log("\nError: You need to set your RPC username and password in example.js. Exiting...\n")
-      process.exit()
-    }
-
     let ledgerRes = new LedgerRes(rpcClient)
-    await ledgerRes.init() //must call this to initialize connection to ledger
-    console.log(await ledgerRes.getPublicKey(0))
+    //await ledgerRes.init() //must call this to initialize connection to ledger
+    if(ledgerRes.isAvailable()){
+      console.log(await ledgerRes.getPublicKey(0))
+    }
 
 
     //send some coins

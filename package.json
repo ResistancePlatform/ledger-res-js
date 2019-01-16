@@ -23,7 +23,7 @@
     "flow-typed": "^2.4.0"
   },
   "scripts": {
-    "example": "yarn build && ./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./example -d ./lib && node ./lib/example.js",
+    "example": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./example -d ./lib && node ./lib/example.js",
     "install": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./lib"
   }
 }
