@@ -2,7 +2,7 @@
   "private": true,
   "name": "ledger-res",
   "version": "4.24.0",
-  "main": "./lib/ledger-res.js",
+  "main": "./src/ledger-res.js",
   "license": "Apache-2.0",
   "presets": [
     "env"
@@ -13,16 +13,16 @@
     "@ledgerhq/hw-transport-node-hid": "^4.24.0",
     "bitcoin-core": "^2.0.0",
     "coinselect": "git+ssh://git@github.com:ResistancePlatform/coinselect.git",
-    "winston": "^3.1.0",
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0"
+    "winston": "^3.1.0"
   },
   "devDependencies": {
     "flow-bin": "^0.68.0",
-    "flow-typed": "^2.4.0"
+    "flow-typed": "^2.4.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0"
   },
   "scripts": {
     "example": "yarn build && ./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./example -d ./lib && node ./lib/example.js",
-    "install": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./lib"
+    "build": "./node_modules/.bin/babel --plugins transform-es2015-modules-commonjs ./src -d ./lib"
   }
 }
