@@ -1,4 +1,7 @@
 'use strict'
+
+import "@babel/polyfill";
+
 import TransportNodeHid from "@ledgerhq/hw-transport-node-hid";
 import AppBtc from "@ledgerhq/hw-app-btc";
 import coinSelect from 'coinselect'

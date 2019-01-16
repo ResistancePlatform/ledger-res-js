@@ -8,14 +8,15 @@
     "env"
   ],
   "dependencies": {
+    "@babel/polyfill": "^7.2.5",
     "@ledgerhq/hw-app-btc": "^4.30.0",
     "@ledgerhq/hw-transport": "^4.24.0",
     "@ledgerhq/hw-transport-node-hid": "^4.24.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
     "bitcoin-core": "^2.0.0",
     "coinselect": "git+ssh://git@github.com:ResistancePlatform/coinselect.git",
-    "winston": "^3.1.0",
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.7.0"
+    "winston": "^3.1.0"
   },
   "devDependencies": {
     "flow-bin": "^0.68.0",
