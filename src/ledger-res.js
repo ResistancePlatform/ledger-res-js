@@ -31,7 +31,7 @@ export default class LedgerRes {
 
   async getDevice() {
     try {
-      const transport = await TransportNodeHid.create(1000);
+      const transport = await TransportNodeHid.create(100, 100);
       const ledger = new AppBtc(transport);
 
       ledger.close = () => transport.close();
@@ -56,10 +56,10 @@ export default class LedgerRes {
 
   async isAvailable() {
     try {
-      await getPublicKey(0);
+      await this.getPublicKey(0);
       return true;
     } catch (err) {
-      return false;
+      throw new LedgerResError(err);
     }
   }
 

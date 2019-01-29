@@ -28,11 +28,16 @@ import LedgerRes from './ledger-res'
 
     let ledgerRes = new LedgerRes(rpcClient)
     //await ledgerRes.init() //must call this to initialize connection to ledger
-    if(ledgerRes.isAvailable()){
-      console.log(await ledgerRes.getPublicKey(0))
+    try{
+        if(await ledgerRes.isAvailable()){
+          console.log(await ledgerRes.getPublicKey(0))
+        }
+    }
+    catch (err) {
+        console.log(err)
     }
 
-
+    process.exit()
     //send some coins
     //set coin sending parameters
     let ledgerBipIndex = 0
