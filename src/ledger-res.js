@@ -69,7 +69,7 @@ export default class LedgerRes {
 
   async addWatchOnly(address) {
     try {
-      let result = await this.rpcClient.importAddress(address, "", true)
+      let result = await this.rpcClient.importAddress(address, "", false)
       return result
     } catch (err) {
       throw new LedgerResError(err);
