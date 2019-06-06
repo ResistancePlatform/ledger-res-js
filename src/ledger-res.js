@@ -155,7 +155,7 @@ export default class LedgerRes {
 
     // Add change address, inputs - (outputs + fees)
     var change = sumInputs - (sumOutputs + fee)
-    //finaloutputs[changeAddress] = change.toFixedDown(6)
+    finaloutputs[changeAddress] = change.toFixedDown(6)
 
     const outputScript = null
 
@@ -163,12 +163,12 @@ export default class LedgerRes {
 
       var txOutRaw = await this.createRawTransaction(middleinputs,finaloutputs)
       var txOut = ledger.splitTransaction(txOutRaw, undefined, undefined, true, ["sapling"])
-      const outputScript = ledger.serializeTransactionOutputs(txOut).toString('hex');
+      const outputScript = ledger.serializeTransactionOutputs(txOut, undefined, undefined, ["sapling"]).toString('hex');
 
       let signedTransaction = await ledger.createPaymentTransactionNew(
         finalinputs,
         associatedkeypaths,
-        undefined, //changepath,
+        undefined,
         outputScript,
         undefined, //locktime
         undefined, //sigHashType
