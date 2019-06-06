@@ -9,9 +9,9 @@
   ],
   "dependencies": {
     "@babel/polyfill": "^7.2.5",
-    "@ledgerhq/hw-app-btc": "^4.35.0",
-    "@ledgerhq/hw-transport": "^4.35.0",
-    "@ledgerhq/hw-transport-node-hid": "^4.35.0",
+    "@ledgerhq/hw-app-btc": "^4.61.0",
+    "@ledgerhq/hw-transport": "^4.61.0",
+    "@ledgerhq/hw-transport-node-hid": "^4.61.1",
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "bitcoin-core": "^2.0.0",
