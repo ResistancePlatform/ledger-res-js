@@ -20,8 +20,8 @@ import LedgerRes from './ledger-res'
       network: 'testnet',
       host: '127.0.0.1',
       port: 18132,
-      username: 'barterres',
-      password: 'xt89hYfpCieLU8HjFjNU3+1vwA2AegCVmNR0jQC5MUM',
+      username: 'resuser',
+      password: 'restest',
       logger: logger,
       timeout: 10000
     })
@@ -37,20 +37,20 @@ import LedgerRes from './ledger-res'
         console.log(err)
     }
 
-    process.exit()
     //send some coins
     //set coin sending parameters
     let ledgerBipIndex = 0
-    let sendToAddress = 'rp5wwANPBfBaEEJCnTFGL7Nfa3Fp2cj3fq3'
+    let sendToAddress = 'rpKDVh8rSsMvj4yWgR6KrMEjqneHHg2BVHt'
     let txFee = 0.0001
-    let payAmount = 1
+    let payAmount = 2
 
     //sign the transaction using the ledger private key
     let signedTransaction = await ledgerRes.sendCoins(sendToAddress, ledgerBipIndex, txFee, payAmount)
-    console.log(signedTransaction)
+    //console.log(signedTransaction)
 
     //broadcast the transaction to the Resistance network
     let sentTransaction = await ledgerRes.sendRawTransaction(signedTransaction)
+    //console.log(sentTransaction)
 
   } catch (err) {
     console.log(err)

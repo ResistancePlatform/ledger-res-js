@@ -111,6 +111,7 @@ export default class LedgerRes {
   async createRawTransaction(finalinputs, finaloutputs){
     try {
       let transaction = await this.rpcClient.createRawTransaction(finalinputs, finaloutputs)
+      //console.log(transaction)
       return transaction
     } catch (err) {
       throw new LedgerResError(err);
@@ -155,12 +156,11 @@ export default class LedgerRes {
 
     // Add change address, inputs - (outputs + fees)
     var change = sumInputs - (sumOutputs + fee)
-    finaloutputs[changeAddress] = change.toFixedDown(6)
+    //finaloutputs[changeAddress] = change.toFixedDown(6)
 
     const outputScript = null
 
     try {
-
       var txOutRaw = await this.createRawTransaction(middleinputs,finaloutputs)
       var txOut = ledger.splitTransaction(txOutRaw)
       const outputScript = ledger.serializeTransactionOutputs(txOut).toString('hex');
@@ -169,8 +169,16 @@ export default class LedgerRes {
         finalinputs,
         associatedkeypaths,
         undefined, //changepath,
-        outputScript
+        outputScript,
+        0, //locktime
+        undefined, //sigHashType
+        undefined, //segwit
+        undefined, //initialTimestamp
+        ["sapling"], //additionals
+        Buffer.from([0x00, 0x00, 0x00, 0x00])
+
       )
+      console.log(signedTransaction)
       return signedTransaction
 
     } catch (err) {
