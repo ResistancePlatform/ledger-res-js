@@ -155,7 +155,7 @@ export default class LedgerRes {
 
     // Add change address, inputs - (outputs + fees)
     var change = sumInputs - (sumOutputs + fee)
-    //finaloutputs[changeAddress] = change.toFixedDown(6)
+    finaloutputs[changeAddress] = change.toFixedDown(6)
 
     const outputScript = null
 
