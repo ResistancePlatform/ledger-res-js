@@ -111,7 +111,6 @@ export default class LedgerRes {
   async createRawTransaction(finalinputs, finaloutputs){
     try {
       let transaction = await this.rpcClient.createRawTransaction(finalinputs, finaloutputs)
-      //console.log(transaction)
       return transaction
     } catch (err) {
       throw new LedgerResError(err);
@@ -139,7 +138,7 @@ export default class LedgerRes {
       let tx = await this.getTx(inputs[i].txid)
       try {
         var inputsm = {txid: inputs[i].txid, vout: inputs[i].vout}
-        var inputsi = [ledger.splitTransaction(tx), inputs[i].vout]
+        var inputsi = [ledger.splitTransaction(tx, undefined, undefined, true, ["sapling"]), inputs[i].vout]
         finalinputs.push(inputsi)
         middleinputs.push(inputsm)
         sumInputs += inputs[i].value
@@ -161,8 +160,9 @@ export default class LedgerRes {
     const outputScript = null
 
     try {
+
       var txOutRaw = await this.createRawTransaction(middleinputs,finaloutputs)
-      var txOut = ledger.splitTransaction(txOutRaw)
+      var txOut = ledger.splitTransaction(txOutRaw, undefined, undefined, true, ["sapling"])
       const outputScript = ledger.serializeTransactionOutputs(txOut).toString('hex');
 
       let signedTransaction = await ledger.createPaymentTransactionNew(
@@ -170,15 +170,13 @@ export default class LedgerRes {
         associatedkeypaths,
         undefined, //changepath,
         outputScript,
-        0, //locktime
+        undefined, //locktime
         undefined, //sigHashType
         undefined, //segwit
         undefined, //initialTimestamp
         ["sapling"], //additionals
         Buffer.from([0x00, 0x00, 0x00, 0x00])
-
       )
-      console.log(signedTransaction)
       return signedTransaction
 
     } catch (err) {
