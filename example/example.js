@@ -17,7 +17,7 @@ import LedgerRes from './ledger-res'
     });
 
     let rpcClient = new Client({
-      network: 'testnet',
+      network: 'mainnet',
       host: '127.0.0.1',
       port: 18132,
       username: 'resuser',
@@ -40,9 +40,9 @@ import LedgerRes from './ledger-res'
     //send some coins
     //set coin sending parameters
     let ledgerBipIndex = 0
-    let sendToAddress = 'rpKDVh8rSsMvj4yWgR6KrMEjqneHHg2BVHt'
+    let sendToAddress = 'r1EmvuTZeS6LezWgsxAaPKh3HzP9EXJDPEp'
     let txFee = 0.0001
-    let payAmount = 2
+    let payAmount = 1
 
     //sign the transaction using the ledger private key
     let signedTransaction = await ledgerRes.sendCoins(sendToAddress, ledgerBipIndex, txFee, payAmount)
@@ -55,24 +55,4 @@ import LedgerRes from './ledger-res'
   } catch (err) {
     console.log(err)
   }
-  /*if(ledgerRes.btcTransport){
-    console.log(await ledgerRes.getPublicKey(0))
-
-    //send some coins
-    //set coin sending parameters
-    let ledgerBipIndex = 0
-    let sendToAddress = 'rp5wwANPBfBaEEJCnTFGL7Nfa3Fp2cj3fq3'
-    let txFee = 0.0001
-    let payAmount = 1
-
-    //sign the transaction using the ledger private key
-    let signedTransaction = await ledgerRes.sendCoins(sendToAddress, ledgerBipIndex, txFee, payAmount)
-    console.log(signedTransaction)
-
-    //broadcast the transaction to the Resistance network
-    let sentTransaction = await ledgerRes.sendRawTransaction(signedTransaction)
-  } else {
-    console.log("5 Ledger not accessible. Please make sure you have plugged in your Ledger, typed in your pin, and opened the Resistance application.")
-  }*/
-
 })();
